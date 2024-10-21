@@ -1,0 +1,43 @@
+{
+  // Global Settings
+  "editor.wordWrap": "off",
+  "editor.lineNumbers": "on",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+
+  "explorer.compactFolders": false,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+
+  "files.trimTrailingWhitespace": true,
+
+  "workbench.editor.enablePreviewFromQuickOpen": false,
+
+  // Language-Specific Settings
+
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.rulers": [
+      { "column": 79, "color": "#5257f1" },
+      { "column": 72, "color": "#d7ae0e" }
+    ],
+    "editor.tabSize": 4
+  },
+
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  }
+
+  // // Black extension settings
+  // "black-formatter.args": ["--line-length=79"],
+
+  // // isort extension settings
+  // "isort.args": ["--profile", "black"]
+}

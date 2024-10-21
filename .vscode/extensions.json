@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "ms-python.black-formatter",
+        "esbenp.prettier-vscode",
+        "shd101wyy.markdown-preview-enhanced",
+        "ms-python.isort",
+        "ms-python.vscode-pylance",
+        "ms-python.python"
+    ]
+}
