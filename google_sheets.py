@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 from pdb import set_trace as st
 
@@ -22,6 +23,7 @@ class Customer:
         follow_up_interval=DEFAULT_FOLLOW_UP_INTERVAL,
         last_contact_date=None,
     ):
+
         self.name = name
         self.first_name = first_name
         self.last_name = last_name
@@ -34,7 +36,6 @@ class Customer:
         self.last_contact_date = self._parse_date(last_contact_date)
 
     def _parse_date(self, date_str):
-        """Convert date string to a datetime.date object, or None if empty."""
         if date_str:
             try:
                 return datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -45,7 +46,6 @@ class Customer:
         return None
 
     def _parse_int(self, value, default):
-        """Safely parse an integer with a fallback default."""
         try:
             return int(value)
 
@@ -53,72 +53,93 @@ class Customer:
             return default
 
 
-def get_google_sheets_service():
-    """Authenticate and return a Google Sheets service instance."""
-    creds = Credentials.from_service_account_file(
-        "credentials.json", scopes=SCOPES
-    )
-
-    return build("sheets", "v4", credentials=creds)
-
-
-def get_customer_data():
-    """Fetch customer data from Google Sheets."""
-    service = get_google_sheets_service()
-    sheet = service.spreadsheets()
-
+def authenticate_google_sheets():
     try:
-        # Fetch customer data from the specified range
-        result = (
-            sheet.values()
+        creds = Credentials.from_service_account_file(
+            "credentials.json", scopes=SCOPES
+        )
+
+        return build("sheets", "v4", credentials=creds).spreadsheets()
+
+    except FileNotFoundError:
+        raise RuntimeError("Credentials file 'credentials.json' not found.")
+
+    except Exception as e:
+        raise RuntimeError(f"Error authenticating with Google Sheets API: {e}")
+
+
+def get_customers(sheets):
+    try:
+        results = (
+            sheets.values()
             .get(spreadsheetId=SPREADSHEET_ID, range=SHEET_NAME)
             .execute()
         )
-        rows = result.get("values", [])
 
     except Exception as e:
-        print(f"Error fetching data from Google Sheets: {e}")
-        return []
+        raise RuntimeError(f"Error fetching data from Google Sheets: {e}")
 
-    if not rows:
-        print("No data found from Google Sheets.")
+    data = results.get("values", [])
+
+    if not data:
         return []
 
     customers = []
-    headers = rows[0]  # assuming first row contains headers
+    headers = data[0]
 
-    for row in rows[1:]:
+    for customer_data in data[1:]:
 
-        data = dict(zip(headers, row))
+        data = dict(zip(headers, customer_data))
 
-        try:
+        if not is_valid_data(data):
+            continue
 
-            customer = Customer(
-                name=data.get("Name"),
-                first_name=data.get("firstName"),
-                last_name=data.get("lastName"),
-                email=data.get("Email"),
-                email_style=data.get("Email Style"),
-                follow_up_override=data.get("Follow Up?"),
-                follow_up_interval=data.get("Custom Follow-Up Interval"),
-                last_contact_date=data.get("Last Contact Date"),
-            )
+        customer = Customer(
+            name=data.get("Name"),
+            first_name=data.get("firstName"),
+            last_name=data.get("lastName"),
+            email=data.get("Email"),
+            email_style=data.get("Email Style"),
+            follow_up_override=bool(data.get("Follow Up?")),
+            follow_up_interval=data.get("Custom Follow-Up Interval"),
+            last_contact_date=data.get("Last Contact Date"),
+        )
 
-            customers.append(customer)
-
-        except Exception as e:
-            print(f"Error creating customer from row data {data}: {e}")
+        customers.append(customer)
 
     return customers
 
 
-def update_last_contact_date(row_number, date_str):
-    """Update the 'Last Contact Date' for a specific row in Google Sheets."""
-    service = get_google_sheets_service()
+def is_valid_data(data):
+
+    # Condition 1: Skip if all cells are empty or "FALSE"
+    if all(cell == "" or cell == "FALSE" for cell in data):
+        return False
+
+    # Condition 2: Check for presence of required fields
+    required_fields = ["Name", "firstName", "lastName", "Email", "Email Style"]
+    missing_fields = [
+        field for field in required_fields if not data.get(field)
+    ]
+
+    if missing_fields:
+        return False
+
+    # Condition 3: Validate email format
+    email = data.get("Email")
+    email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    if not re.match(email_pattern, email):
+        return False
+
+    return True
+
+
+def update_last_contact_date(sheets, row_number, date_str):
+
     try:
         body = {"values": [[date_str]]}
-        range_to_update = f"{SHEET_NAME}!I{row_number}"  # Assuming "Last Contact Date" is column I
-        service.spreadsheets().values().update(
+        range_to_update = f"{SHEET_NAME}!I{row_number}"
+        sheets.values().update(
             spreadsheetId=SPREADSHEET_ID,
             range=range_to_update,
             valueInputOption="USER_ENTERED",

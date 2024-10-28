@@ -5,27 +5,28 @@ from email.mime.text import MIMEText
 from pdb import set_trace as st
 
 from config import EMAIL_ADDRESS, EMAIL_PASSWORD
-from google_sheets import get_customer_data, update_last_contact_date
+from google_sheets import (
+    authenticate_google_sheets,
+    get_customers,
+    update_last_contact_date,
+)
 
 
 def should_follow_up(last_contact_date, interval):
-    """Determine if a follow-up email is due based on last contact date and interval."""
     if not last_contact_date:
-        return False
+        return True
 
     today = datetime.now().date()
     return (last_contact_date + timedelta(days=interval)) <= today
 
 
 def send_email(customer, body):
-    """Send an email to a customer."""
     msg = MIMEText(body, "html")
     msg["From"] = EMAIL_ADDRESS
     msg["To"] = customer.email
     msg["Subject"] = "Follow-Up Email"
 
     try:
-        # Connect to SMTP server and send email
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.sendmail(EMAIL_ADDRESS, customer.email, msg.as_string())
@@ -60,7 +61,10 @@ def create_email_content(customer):
 
 def main():
 
-    customers = get_customer_data()
+    sheets = authenticate_google_sheets()
+
+    customers = get_customers(sheets)
+    emails_sent = 0
 
     for customer in customers:
         if should_follow_up(
@@ -72,6 +76,12 @@ def main():
             if send_email(customer, email_body):
                 date_str = datetime.now().strftime("%Y-%m-%d")
                 update_last_contact_date(customer.row_number, date_str)
+                emails_sent += 1
+
+    if emails_sent == 0:
+        print("No follow-up emails were sent today.")
+    else:
+        print(f"{emails_sent} follow-up emails sent.")
 
 
 if __name__ == "__main__":
