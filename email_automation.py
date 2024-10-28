@@ -30,12 +30,9 @@ def send_email(customer, body):
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.sendmail(EMAIL_ADDRESS, customer.email, msg.as_string())
-            print(f"Email sent to {customer.email}")
-        return True
 
     except Exception as e:
-        print(f"Error sending email to {customer.email}: {e}")
-        return False
+        raise RuntimeError(f"Error sending email to {customer.name}: {e}")
 
 
 def create_email_content(customer):
@@ -73,10 +70,13 @@ def main():
 
             email_body = create_email_content(customer)
 
-            if send_email(customer, email_body):
-                date_str = datetime.now().strftime("%Y-%m-%d")
-                update_last_contact_date(customer.row_number, date_str)
-                emails_sent += 1
+            send_email(customer, email_body)
+            update_last_contact_date(
+                sheets,
+                customer,
+                datetime.now().strftime("%Y-%m-%d"),
+            )
+            emails_sent += 1
 
     if emails_sent == 0:
         print("No follow-up emails were sent today.")

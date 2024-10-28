@@ -18,10 +18,8 @@ SHEET_NAME = config.get("google_sheets", "sheet_name", fallback="Sheet1")
 
 EMAIL_ADDRESS = config.get("smtp_settings", "email_address")
 
-EMAIL_PASSWORD = getpass.getpass(
-    prompt=f"account password for {EMAIL_ADDRESS}: "
-)
+EMAIL_PASSWORD = config.get("smtp_settings", "email_password")
 
-DEFAULT_FOLLOW_UP_INTERVAL = config.get(
-    "email_automation", "default_follow_up_interval"
+DEFAULT_FOLLOW_UP_INTERVAL = int(
+    config.get("email_automation", "default_follow_up_interval")
 )

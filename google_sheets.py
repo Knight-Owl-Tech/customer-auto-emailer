@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from config import DEFAULT_FOLLOW_UP_INTERVAL, SHEET_NAME, SPREADSHEET_ID
 
 # Define the required Google Sheets API scope
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 
 class Customer:
@@ -68,7 +68,7 @@ def authenticate_google_sheets():
         raise RuntimeError(f"Error authenticating with Google Sheets API: {e}")
 
 
-def get_customers(sheets):
+def get_data(sheets):
     try:
         results = (
             sheets.values()
@@ -79,7 +79,11 @@ def get_customers(sheets):
     except Exception as e:
         raise RuntimeError(f"Error fetching data from Google Sheets: {e}")
 
-    data = results.get("values", [])
+    return results.get("values", [])
+
+
+def get_customers(sheets):
+    data = get_data(sheets)
 
     if not data:
         return []
@@ -134,19 +138,34 @@ def is_valid_data(data):
     return True
 
 
-def update_last_contact_date(sheets, row_number, date_str):
+def update_last_contact_date(sheets, customer, date_str):
+    data = get_data(sheets)
+
+    if not data:
+        return []
+
+    headers = data[0]
+
+    if "Last Contact Date" not in headers:
+        raise ValueError("Could not find 'Last Contact Date' column.")
+
+    col_index = headers.index("Last Contact Date") + 1
+
+    for i, row in enumerate(data[1:], start=2):
+        if row and row[headers.index("Email")] == customer.email:
+            row_index = i
+            break
 
     try:
         body = {"values": [[date_str]]}
-        range_to_update = f"{SHEET_NAME}!I{row_number}"
         sheets.values().update(
             spreadsheetId=SPREADSHEET_ID,
-            range=range_to_update,
+            range=f"{SHEET_NAME}!R{row_index}C{col_index}",
             valueInputOption="USER_ENTERED",
             body=body,
         ).execute()
-        print(
-            f"Updated 'Last Contact Date' for row {row_number} to {date_str}"
-        )
+
     except Exception as e:
-        print(f"Error updating 'Last Contact Date' for row {row_number}: {e}")
+        raise RuntimeError(
+            f"Error updating 'Last Contact Date' to {customer.email}: {e}"
+        )
