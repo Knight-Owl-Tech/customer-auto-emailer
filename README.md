@@ -11,7 +11,6 @@ The goal is to simplify customer management and improve engagement by ensuring t
 - **Automated Email Sending**: Schedule and send follow-up emails based on specific time intervals.
 - **Google Sheets Integration**: Fetch customer information directly from a shared Google Sheets spreadsheet.
 - **Customizable Email Templates**: Use or modify email templates to suit your business communication style.
-- **Error Handling**: Basic error handling for failed email sends and incorrect data entries.
 
 ### Requirements
 
@@ -63,18 +62,32 @@ The goal is to simplify customer management and improve engagement by ensuring t
 
 4. **Configure your SMTP settings**:
 
-   - Set up your Google account for SMTP access and generate an App Password if using 2FA.
+   - Set up your Google account for SMTP access and generate an App Password.
+
+     - You will need to enable 2FA if you haven't already in order to create an App Password. Go to [Google Account Security](https://myaccount.google.com/security) and under "How you sign in to Google" section, click "2-Step Verification"/
+
+     - After enabling 2FA, return to [Google Account Security](https://myaccount.google.com/security). Search "App Passwords" and create one for this project. Give it a specific name (i.e., "customer-auto-emailer").
 
    - You will need to include an `email.cfg` file at the root project directory and store the following information.
 
-     - The Google Sheets ID is the long string of characters in the URL when you open the Google Sheet. For example, in a URL like https://docs.google.com/spreadsheets/d/some-extremely-long-hash/edit, the ID is some-extremely-long-hash.
+     - Google Spreadsheet ID
+
+       - The Google Sheets ID is the long string of characters in the URL when you open the Google Sheet. For example, in a URL like` https://docs.google.com/spreadsheets/d/some-extremely-long-hash/edit`, the ID is some-extremely-long-hash.
+
+     - Your email address and App Password to use.
+
+     - Follow-Up interval that represents number of days.
 
    ```config
    [google_sheets]
    spreadsheet_id = your-spreadsheet-id
 
    [smtp_settings]
-   email_address = 'your-email@gmail.com'
+   email_address = your-email@gmail.com
+   email_password = some_hash_value
+
+   [email_automation]
+   default_follow_up_interval = some_int_value
    ```
 
 ### File Structure
@@ -86,8 +99,8 @@ The goal is to simplify customer management and improve engagement by ensuring t
 ├── config.py # Email credentials and configuration
 ├── google_sheets.py # Script to interact with Google Sheets
 ├── templates/ # Folder for email templates
-│   ├── followup_template_1.html # you create your templates as necessary (not included in repo)
-│   └── followup_template_2.html
+│   ├── formal_follow-up.html   # Template for Formal email style
+│   └── casual_follow-up.html   # Template for Casual email style
 ├── email.cfg # File to contain important info (not included in repo)
 └── credentials.json # Google Sheets Service Account credentials (not included in repo)
 ```
@@ -96,7 +109,21 @@ The goal is to simplify customer management and improve engagement by ensuring t
 
 1. **Populate the Google Sheet**:
 
-   - The Google Sheet should include columns for Name, Email, Last Contact Date, and Follow-Up Interval.
+   - To set up the Google Sheets template, [click here](https://docs.google.com/spreadsheets/d/19aBWnh2iwkLwcHIX3nVqzdvzlZaCTQP5I4vXTaQi-M4/copy) to make a copy of the template in your own Google Drive. After making a copy, share the new sheet with your Google Service Account email to allow your project to access it.
+
+   - Below gives a description of each column:
+
+   | Column Name                   | Cell Type       | Description                                                                     |
+   | ----------------------------- | --------------- | ------------------------------------------------------------------------------- |
+   | **Email**                     | Text            | _Required_: Enter the customer's email.                                         |
+   | **Email Style**               | Dropdown        | _Required_: Choose between "Formal" or "Casual" email style.                    |
+   | **First Name**                | Text            | _Optional_: Auto-filled from "Name" if available; can also be entered manually. |
+   | **Last Name**                 | Text            | _Optional_: Auto-filled from "Name" if available; can also be entered manually. |
+   | **Company**                   | Text            | _Optional_: Enter the company name if applicable.                               |
+   | **Follow-Up?**                | Checkbox (bool) | _Required_: Enable the follow-up email.                                         |
+   | **Custom Follow-Up Interval** | Number          | _Optional_: custom interval for follow-ups per customer.                        |
+   | **Notes**                     | Text            | _Optional_: Additional notes about the customer.                                |
+   | **Last Contact Date**         | Date            | _Metadata_: Auto-updated by script to track last email contact date.            |
 
 2. **Run the script**:
 
@@ -104,9 +131,7 @@ The goal is to simplify customer management and improve engagement by ensuring t
    python email_automation.py
    ```
 
-3. **Scheduled Follow-Ups**:
-
-   - The script will automatically check for customers who are due for follow-up emails and send them accordingly.
+   - The script will check for customers due for follow-up emails and send them based on their designated email style and follow-up interval. After a successful email, the "Last Contact Date" column is updated automatically.
 
 ### Customization
 
@@ -122,6 +147,5 @@ The goal is to simplify customer management and improve engagement by ensuring t
 
 ### Future Improvements
 
-- Improved error logging and notifications.
-
-- Support for multiple email providers.
+- **Enhanced error logging**: Improve logging for better insights into failed attempts and errors.
+- **Support for multiple email providers**: Expand beyond Gmail to allow compatibility with other email services.

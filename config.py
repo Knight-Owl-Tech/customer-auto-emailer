@@ -1,11 +1,5 @@
 import configparser
-import getpass
 from pathlib import Path
-
-# ---------------------------------------------
-# Project Configuration
-# ---------------------------------------------
-# Load project-specific info from project email.cfg
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -18,4 +12,8 @@ SHEET_NAME = config.get("google_sheets", "sheet_name", fallback="Sheet1")
 
 EMAIL_ADDRESS = config.get("smtp_settings", "email_address")
 
-EMAIL_PASSWORD = getpass.getpass(prompt="email password: ")
+EMAIL_PASSWORD = config.get("smtp_settings", "email_password")
+
+DEFAULT_FOLLOW_UP_INTERVAL = int(
+    config.get("email_automation", "default_follow_up_interval")
+)
