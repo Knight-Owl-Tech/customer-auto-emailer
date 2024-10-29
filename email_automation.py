@@ -14,6 +14,17 @@ from utils import should_follow_up
 
 
 def send_email(customer, body):
+    """
+    Sends an email to the specified customer.
+
+    Args:
+        customer (Customer): The customer object containing email details.
+        body (str): The HTML content of the email.
+
+    Raises:
+        RuntimeError: If there is an error during the SMTP process or sending the email.
+    """
+
     msg = MIMEText(body, "html")
     msg["From"] = EMAIL_ADDRESS
     msg["To"] = customer.email
@@ -31,6 +42,19 @@ def send_email(customer, body):
 
 
 def create_email_content(customer):
+    """
+    Creates the email content for a customer based on their email style.
+
+    Args:
+        customer (Customer): The customer object containing email style and recipient details.
+
+    Returns:
+        str: The email content with the recipient's name replaced.
+
+    Raises:
+        FileNotFoundError: If the email template file is not found.
+    """
+
     template_mapping = {
         "Formal": "formal_follow-up.html",
         "Casual": "casual_follow-up.html",
@@ -49,6 +73,12 @@ def create_email_content(customer):
 
 
 def main():
+    """
+    Main function to authenticate Google Sheets, load customers,
+    send follow-up emails, and update the last contact date.
+
+    This function tracks the number of emails sent and provides feedback.
+    """
 
     sheets = authenticate_google_sheets()
 

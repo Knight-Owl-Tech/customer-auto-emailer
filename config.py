@@ -1,11 +1,5 @@
 import configparser
-import getpass
 from pathlib import Path
-
-# ---------------------------------------------
-# Project Configuration
-# ---------------------------------------------
-# Load project-specific info from project email.cfg
 
 BASE_DIR = Path(__file__).resolve().parent
 

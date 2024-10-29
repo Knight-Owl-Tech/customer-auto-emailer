@@ -4,6 +4,21 @@ from config import DEFAULT_FOLLOW_UP_INTERVAL
 
 
 class Customer:
+    """
+    Represents a customer with attributes related to follow-up email preferences, contact details,
+    and follow-up interval. Provides functionality for parsing and formatting customer information.
+
+    Attributes:
+        email (str): The customer's email address.
+        email_style (str): Style of email communication ("Formal" or "Casual").
+        first_name (str, optional): The customer's first name. Default is None.
+        last_name (str, optional): The customer's last name. Default is None.
+        company (str, optional): The company associated with the customer. Default is None.
+        enable_follow_up (bool): Flag indicating if follow-up emails are enabled. Default is False.
+        follow_up_interval (int): The number of days between follow-ups, parsed as an integer.
+        last_contact_date (datetime.date): The date of the last email contact. Default is None.
+    """
+
     def __init__(
         self,
         email,
@@ -22,19 +37,31 @@ class Customer:
         self.last_name = last_name
         self.company = company
         self.enable_follow_up = enable_follow_up
-        self.follow_up_interval = self._parse_int(follow_up_interval)
+        self.follow_up_interval = int(self._parse_int(follow_up_interval))
         self.last_contact_date = self._parse_date(last_contact_date)
 
     @property
     def name(self):
-        # Use "First Last" if available, otherwise fallback to name (company name)
+        """
+        Create the customer's full name if both first and last names are available.
+
+        Returns:
+            str: The full name "First, Last" if both names are present; otherwise, None.
+        """
+
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return None
 
     @property
     def recipient_name(self):
-        # property used to address the recipient in the email
+        """
+        Provides the appropriate recipient name for addressing the customer in emails.
+
+        Returns:
+            str: Full name if "Formal" email style; first name if "Casual"; or company name.
+        """
+
         if self.name:
             if self.email_style == "Formal":
                 return self.name
@@ -42,6 +69,16 @@ class Customer:
         return self.company
 
     def _parse_date(self, date_str):
+        """
+        Parses a string date into a datetime.date object.
+
+        Parameters:
+            date_str (str): Date in "YYYY-MM-DD" format.
+
+        Returns:
+            datetime.date: Parsed date, or None.
+        """
+
         if date_str:
             try:
                 return datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -50,6 +87,3 @@ class Customer:
                     f"Warning: Invalid date format for customer {self.name}: {date_str}"
                 )
         return None
-
-    def _parse_int(self, value):
-        return int(value)

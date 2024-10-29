@@ -12,6 +12,16 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 
 def authenticate_google_sheets():
+    """
+    Authenticates and returns a Google Sheets service object.
+
+    Returns:
+        googleapiclient.discovery.Resource: The authenticated Google Sheets service object.
+
+    Raises:
+        RuntimeError: If the credentials file is not found or if there is an error during authentication.
+    """
+
     try:
         creds = Credentials.from_service_account_file(
             "credentials.json", scopes=SCOPES
@@ -27,6 +37,19 @@ def authenticate_google_sheets():
 
 
 def fetch_sheet_data(sheets):
+    """
+    Fetches data from the specified Google Sheet.
+
+    Args:
+        sheets (googleapiclient.discovery.Resource): The authenticated Google Sheets service object.
+
+    Returns:
+        list: A list of values retrieved from the Google Sheet.
+
+    Raises:
+        RuntimeError: If there is an error fetching data from the Google Sheets.
+    """
+
     try:
         results = (
             sheets.values()
@@ -41,6 +64,16 @@ def fetch_sheet_data(sheets):
 
 
 def load_customers(sheets):
+    """
+    Loads customers from the Google Sheet and returns a list of Customer objects.
+
+    Args:
+        sheets (googleapiclient.discovery.Resource): The authenticated Google Sheets service object.
+
+    Returns:
+        list: A list of Customer objects populated from the sheet data.
+    """
+
     data = fetch_sheet_data(sheets)
 
     if not data:
@@ -73,6 +106,19 @@ def load_customers(sheets):
 
 
 def update_last_contact_date(sheets, customer, date_str):
+    """
+    Updates the 'Last Contact Date' for a specific customer in the Google Sheet.
+
+    Args:
+        sheets (googleapiclient.discovery.Resource): The authenticated Google Sheets service object.
+        customer (Customer): The customer whose last contact date is to be updated.
+        date_str (str): The new contact date in "YYYY-MM-DD" format.
+
+    Raises:
+        ValueError: If the 'Last Contact Date' column is not found.
+        RuntimeError: If there is an error updating the last contact date.
+    """
+
     data = fetch_sheet_data(sheets)
 
     if not data:
