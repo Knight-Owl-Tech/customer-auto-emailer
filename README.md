@@ -62,17 +62,21 @@ The goal is to simplify customer management and improve engagement by ensuring t
 
 4. **Configure your SMTP settings**:
 
-   - Set up your Google account for SMTP access and generate an App Password if using 2FA.
+   - Set up your Google account for SMTP access and generate an App Password.
+
+     - You will need to enable 2FA if you haven't already in order to create an App Password. Go to [Google Account Security](https://myaccount.google.com/security) and under "How you sign in to Google" section, click "2-Step Verification"/
+
+     - After enabling 2FA, return to [Google Account Security](https://myaccount.google.com/security). Search "App Passwords" and create one for this project. Give it a specific name (i.e., "customer-auto-emailer").
 
    - You will need to include an `email.cfg` file at the root project directory and store the following information.
 
      - Google Spreadsheet ID
 
-       - The Google Sheets ID is the long string of characters in the URL when you open the Google Sheet. For example, in a URL like https://docs.google.com/spreadsheets/d/some-extremely-long-hash/edit, the ID is some-extremely-long-hash.
+       - The Google Sheets ID is the long string of characters in the URL when you open the Google Sheet. For example, in a URL like` https://docs.google.com/spreadsheets/d/some-extremely-long-hash/edit`, the ID is some-extremely-long-hash.
 
-     - Your email address to use
+     - Your email address and App Password to use.
 
-     - Follow-Up interval that represents number of days
+     - Follow-Up interval that represents number of days.
 
    ```config
    [google_sheets]
@@ -80,6 +84,7 @@ The goal is to simplify customer management and improve engagement by ensuring t
 
    [smtp_settings]
    email_address = your-email@gmail.com
+   email_password = some_hash_value
 
    [email_automation]
    default_follow_up_interval = some_int_value
@@ -108,17 +113,17 @@ The goal is to simplify customer management and improve engagement by ensuring t
 
    - Below gives a description of each column:
 
-   | Column Name                   | Cell Type                  | Description                                             |
-   | ----------------------------- | -------------------------- | ------------------------------------------------------- |
-   | **Name**                      | Google ‘People’ Smart Chip | Links to Google Contacts                                |
-   | **firstName**                 | Text (protected)           | Auto-generated based on "Name"                          |
-   | **lastName**                  | Text (protected)           | Auto-generated based on "Name"                          |
-   | **Email**                     | Text                       | Manual entry for customer email                         |
-   | **Follow-Up?**                | Checkbox                   | Boolean value: True (checked) or False (unchecked)      |
-   | **Email Style**               | Dropdown (text)            | Choose between styles: "Formal" or "Casual"             |
-   | **Custom Follow-Up Interval** | Number                     | Optional, custom interval for follow-ups per customer   |
-   | **Notes**                     | Text                       | Additional notes about the customer                     |
-   | **Last Contact Date**         | Date (protected)           | Auto-updated by script to track last email contact date |
+   | Column Name                   | Cell Type       | Description                                                                     |
+   | ----------------------------- | --------------- | ------------------------------------------------------------------------------- |
+   | **Email**                     | Text            | _Required_: Enter the customer's email.                                         |
+   | **Email Style**               | Dropdown        | _Required_: Choose between "Formal" or "Casual" email style.                    |
+   | **First Name**                | Text            | _Optional_: Auto-filled from "Name" if available; can also be entered manually. |
+   | **Last Name**                 | Text            | _Optional_: Auto-filled from "Name" if available; can also be entered manually. |
+   | **Company**                   | Text            | _Optional_: Enter the company name if applicable.                               |
+   | **Follow-Up?**                | Checkbox (bool) | _Required_: Enable the follow-up email.                                         |
+   | **Custom Follow-Up Interval** | Number          | _Optional_: custom interval for follow-ups per customer.                        |
+   | **Notes**                     | Text            | _Optional_: Additional notes about the customer.                                |
+   | **Last Contact Date**         | Date            | _Metadata_: Auto-updated by script to track last email contact date.            |
 
 2. **Run the script**:
 

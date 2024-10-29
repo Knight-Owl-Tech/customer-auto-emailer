@@ -1,23 +1,16 @@
 import os
 import smtplib
-from datetime import datetime, timedelta
+from datetime import datetime
 from email.mime.text import MIMEText
 from pdb import set_trace as st
 
 from config import EMAIL_ADDRESS, EMAIL_PASSWORD
 from google_sheets import (
     authenticate_google_sheets,
-    get_customers,
+    load_customers,
     update_last_contact_date,
 )
-
-
-def should_follow_up(last_contact_date, interval):
-    if not last_contact_date:
-        return True
-
-    today = datetime.now().date()
-    return (last_contact_date + timedelta(days=interval)) <= today
+from utils import should_follow_up
 
 
 def send_email(customer, body):
@@ -31,36 +24,35 @@ def send_email(customer, body):
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.sendmail(EMAIL_ADDRESS, customer.email, msg.as_string())
 
-    except Exception as e:
-        raise RuntimeError(f"Error sending email to {customer.name}: {e}")
+    except smtplib.SMTPException as e:
+        raise RuntimeError(
+            f"SMTP error sending email to {customer.email}: {e}"
+        )
 
 
 def create_email_content(customer):
-    """Generate the email body based on a template."""
     template_mapping = {
         "Formal": "formal_follow-up.html",
         "Casual": "casual_follow-up.html",
     }
 
-    try:
-        template = template_mapping.get(customer.email_style)
-
-    except Exception as e:
-        print(f"Email Style is missing for {customer.name}")
+    template = template_mapping.get(customer.email_style)
 
     try:
         with open(os.path.join("templates", template), "r") as template_file:
             content = template_file.read()
-            return content.replace("{{ customer_name }}", customer.first_name)
+            return content.replace(
+                "{{ recipient_name }}", customer.recipient_name
+            )
     except FileNotFoundError:
-        print(f"Template not found: {template}")
+        raise FileNotFoundError(f"Template not found: {template}")
 
 
 def main():
 
     sheets = authenticate_google_sheets()
 
-    customers = get_customers(sheets)
+    customers = load_customers(sheets)
     emails_sent = 0
 
     for customer in customers:
