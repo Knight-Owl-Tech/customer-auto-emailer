@@ -59,14 +59,21 @@ class Customer:
         Provides the appropriate recipient name for addressing the customer in emails.
 
         Returns:
-            str: Full name if "Formal" email style; first name if "Casual"; or company name.
-        """
+            str: First name if available or company name as a fallback.
 
-        if self.name:
-            if self.email_style == "Formal":
-                return self.name
-            return self.first_name
-        return self.company
+        Raises:
+            ValueError: If a name could not be created.
+        """
+        try:
+            if self.first_name:
+                return self.first_name
+
+            return self.company
+
+        except ValueError:
+            raise ValueError(
+                f"Recipient name could not be determined. Please ensure {self.email} has either a 'First Name' or 'Company' available"
+            )
 
     def _parse_date(self, date_str):
         """
